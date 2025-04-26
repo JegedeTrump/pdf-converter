@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JPG to PDF Converter</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/pdfmake/build/pdfmake.min.js"></script>
+  <script src="https://unpkg.com/pdfmake/build/vfs_fonts.js"></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState } = React;
+
+    const App = () => {
+      const [file, setFile] = useState(null);
+      const [isPremium, setIsPremium] = useState(false); // Mock premium status
+      const [conversionCount, setConversionCount] = useState(0);
+      const FREE_LIMIT = 2;
+
+      const handleFileChange = (e) => {
+        setFile(e.target.files[0]);
+      };
+
+      const convertToPDF = () => {
+        if (!file) {
+          alert("Please upload a JPG file.");
+          return;
+        }
+        if (!isPremium && conversionCount >= FREE_LIMIT) {
+          alert("Free limit reached! Upgrade to premium for unlimited conversions.");
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const imgData = e.target.result;
+          const docDefinition = {
+            content: [
+              {
+                image: imgData,
+                width: 500,
+              },
+            ],
+          };
+          pdfMake.createPdf(docDefinition).download("converted.pdf");
+          setConversionCount(conversionCount + 1);
+        };
+        reader.readAsDataURL(file);
+      };
+
+      const handleUpgrade = () => {
+        // Paystack payment
+        PaystackPop.setup({
+          key: "pk_test_your_paystack_public_key", // Replace with your Paystack public key
+          email: "user@example.com", // Replace with user input or dynamic email
+          amount: 500000, // ₦5,000 (~$5 at ₦1,000/$1)
+          currency: "NGN",
+          ref: "J2P_" + Math.floor(Math.random() * 1000000000),
+          callback: function (response) {
+            alert("Payment successful! Reference: " + response.reference);
+            setIsPremium(true); // Update to premium status
+          },
+          onClose: function () {
+            alert("Payment cancelled.");
+          },
+        }).openIframe();
+      };
+
+      return (
+        <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+          <h1 class="text-3xl font-bold mb-6">JPG to PDF Converter</h1>
+          
+          {/* Ad Placeholder */}
+          {!isPremium && (
+            <div className="mb-4 p-4 bg-gray-200 w-full max-w-md text-center">
+              <p>Ad: Try Dropbox for file storage! <a href="https://your-affiliate-link.com" class="text-blue-500">Sign up now</a></p>
+              {/* Google AdSense: Replace with your ad code */}
+              <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+              <ins className="adsbygoogle" style={{ display: "block" }} data-ad-client="ca-pub-xxxxxxxxxxxxxxxx" data-ad-slot="xxxxxxxxxx" data-ad-format="auto"></ins>
+              <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+          )}
+
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <input
+              type="file"
+              accept="image/jpeg"
+              onChange={handleFileChange}
+              className="mb-4 w-full p-2 border rounded"
+            />
+            <button
+              onClick={convertToPDF}
+              className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+            >
+              Convert to PDF
+            </button>
+            <p className="mt-2 text-sm text-gray-600">
+              Free conversions: {FREE_LIMIT - conversionCount}/{FREE_LIMIT}
+            </p>
+            {!isPremium && (
+              <button
+                onClick={handleUpgrade}
+                className="mt-4 w-full bg-green-500 text-white p-2 rounded hover:bg-green-600"
+              >
+                Upgrade to Premium (₦5,000/month)
+              </button>
+            )}
+          </div>
+
+          {/* Affiliate Link */}
+          <p className="mt-6 text-sm">
+            Need more storage? <a href="https://your-affiliate-link.com" class="text-blue-500">Check out Adobe Acrobat</a>
+          </p>
+        </div>
+      );
+    };
+
+    ReactDOM.render(<App />, document.getElementById("root"));
+  </script>
+</body>
+</html>
