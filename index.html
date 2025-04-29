@@ -71,6 +71,12 @@
       color: #FFD700;
       text-decoration: none;
     }
+    .upload-section {
+      margin-top: 10px;
+    }
+    input[type="file"] {
+      margin: 10px 0;
+    }
   </style>
 </head>
 <body>
@@ -81,9 +87,14 @@
 
   <div class="container">
     <!-- Free Plan -->
-    <div class="plan">
+    <div class="plan" id="free-plan">
       <h2>Free Plan</h2>
       <p>Convert 2 Files Free!</p>
+      <div class="upload-section">
+        <input type="file" id="fileInput" accept="image/jpeg" multiple>
+        <button onclick="convertFree()">Convert to PDF</button>
+        <p id="free-message"></p>
+      </div>
     </div>
 
     <!-- Premium Plan -->
@@ -104,7 +115,7 @@
 
   <!-- Footer with Affiliate Links -->
   <footer>
-    <p>&copy; 2025 NaijaPDFConverter.com</p>
+    <p>© 2025 NaijaPDFConverter.com</p>
     <p>
       Recommended Tools: 
       <a href="https://your-dropbox-affiliate-link.com">Dropbox</a> | 
@@ -115,6 +126,7 @@
   <!-- Paystack Inline Checkout Script -->
   <script src="https://js.paystack.co/v1/inline.js"></script>
   <script>
+    // Paystack for Premium Plan
     function payWithPaystack() {
       let handler = PaystackPop.setup({
         key: 'pk_live_7eeaf7c7e848c63b424b84dc001f76e57f42e470', // Your Paystack live key
@@ -141,6 +153,58 @@
       });
       handler.openIframe();
     }
+
+    // Free Plan Conversion (Client-Side Simulation)
+    let freeConversionCount = 0;
+    const maxFreeConversions = 2;
+
+    function convertFree() {
+      const fileInput = document.getElementById('fileInput');
+      const message = document.getElementById('free-message');
+      const files = fileInput.files;
+
+      // Check if files are selected
+      if (files.length === 0) {
+        message.textContent = 'Please select at least one JPG file.';
+        return;
+      }
+
+      // Check file type and limit
+      let validFiles = 0;
+      for (let i = 0; i < files.length; i++) {
+        if (files[i].type === 'image/jpeg') {
+          validFiles++;
+        }
+      }
+
+      if (validFiles === 0) {
+        message.textContent = 'Please select valid JPG files.';
+        return;
+      }
+
+      // Check free conversion limit
+      if (freeConversionCount + validFiles > maxFreeConversions) {
+        message.textContent = 'Free limit reached! Upgrade to Premium for unlimited conversions.';
+        return;
+      }
+
+      // Simulate conversion (since there's no backend)
+      freeConversionCount += validFiles;
+      message.textContent = `Successfully "converted" ${validFiles} file(s) to PDF! (${freeConversionCount}/${maxFreeConversions} used)`;
+
+      // Simulate a downloadable PDF link (placeholder)
+      setTimeout(() => {
+        const downloadLink = document.createElement('a');
+        downloadLink.href = '#'; // Replace with actual PDF URL if you add a backend
+        downloadLink.download = 'converted-file.pdf';
+        downloadLink.textContent = 'Download your PDF (placeholder)';
+        message.appendChild(document.createElement('br'));
+        message.appendChild(downloadLink);
+      }, 1000);
+
+      // Clear the file input
+      fileInput.value = '';
+    }
   </script>
 </body>
-</html>
+                                                        </html>
