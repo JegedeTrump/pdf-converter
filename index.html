@@ -3,111 +3,144 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JPG to PDF Converter</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/pdfmake/build/pdfmake.min.js"></script>
-  <script src="https://unpkg.com/pdfmake/build/vfs_fonts.js"></script>
-  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <title>NaijaPDFConverter - Convert JPG to PDF</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+      text-align: center;
+    }
+    header {
+      background-color: #007bff;
+      color: white;
+      padding: 20px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    .container {
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .plan {
+      background-color: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .plan h2 {
+      font-size: 20px;
+      margin: 0 0 10px;
+    }
+    .plan p {
+      margin: 0 0 10px;
+    }
+    button {
+      background-color: #FFD700;
+      color: #000;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #ffcc00;
+    }
+    .ads {
+      margin: 20px 0;
+    }
+    .ads img {
+      max-width: 100%;
+      height: auto;
+    }
+    footer {
+      background-color: #333;
+      color: white;
+      padding: 10px;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+    footer a {
+      color: #FFD700;
+      text-decoration: none;
+    }
+  </style>
 </head>
-<body class="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
-  <h1 class="text-3xl font-bold mb-6">JPG to PDF Converter</h1>
+<body>
+  <header>
+    <h1>NaijaPDFConverter</h1>
+    <p>Convert JPG to PDF for Visa and Job Applications</p>
+  </header>
 
-  <!-- Ad Placeholder -->
-  <div id="ad-placeholder" class="mb-4 p-4 bg-gray-200 w-full max-w-md text-center">
-    <p>Ad: Try Dropbox for file storage! <a href="https://your-affiliate-link.com" class="text-blue-500">Sign up now</a></p>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-xxxxxxxxxxxxxxxx" data-ad-slot="xxxxxxxxxx" data-ad-format="auto"></ins>
-    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  <div class="container">
+    <!-- Free Plan -->
+    <div class="plan">
+      <h2>Free Plan</h2>
+      <p>Convert 2 Files Free!</p>
+    </div>
+
+    <!-- Premium Plan -->
+    <div class="plan">
+      <h2>Premium Plan</h2>
+      <p>₦5,000 for 3 Months (Unlimited Conversions)</p>
+      <button onclick="payWithPaystack()">Upgrade to Premium</button>
+    </div>
+
+    <!-- Ads Section -->
+    <div class="ads">
+      <h2>Our Ads</h2>
+      <!-- Replace with your actual ad image URLs (from Google Drive or upload directly) -->
+      <img src="visa-ad-image-url.jpg" alt="Visa Ad">
+      <img src="job-ad-image-url.jpg" alt="Job Ad">
+    </div>
   </div>
-  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-    <input
-      type="file"
-      id="file-input"
-      accept="image/jpeg"
-      class="mb-4 w-full p-2 border rounded"
-    />
-    <button
-      id="convert-btn"
-      class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
-    >
-      Convert to PDF
-    </button>
-    <p id="conversion-counter" class="mt-2 text-sm text-gray-600">
-      Free conversions: 2/2
+
+  <!-- Footer with Affiliate Links -->
+  <footer>
+    <p>&copy; 2025 NaijaPDFConverter.com</p>
+    <p>
+      Recommended Tools: 
+      <a href="https://your-dropbox-affiliate-link.com">Dropbox</a> | 
+      <a href="https://your-adobe-acrobat-affiliate-link.com">Adobe Acrobat</a>
     </p>
-    <button
-      id="upgrade-btn"
-      class="mt-4 w-full bg-green-500 text-white p-2 rounded hover:bg-green-600"
-    >
-      Upgrade to Premium (₦5,000 for 3 Months (Unlimited Conversions))
-    </button>
-  </div>
-  <!-- Affiliate Link -->
-  <p class="mt-6 text-sm">
-    Need more storage? <a href="https://your-affiliate-link.com" class="text-blue-500">Check out Adobe Acrobat</a>
-  </p>
+  </footer>
 
+  <!-- Paystack Inline Checkout Script -->
+  <script src="https://js.paystack.co/v1/inline.js"></script>
   <script>
-    let conversionCount = 0;
-    const FREE_LIMIT = 2;
-    let isPremium = false;
-
-    document.getElementById("file-input").addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      window.currentFile = file; // Store file for conversion
-    });
-
-    document.getElementById("convert-btn").addEventListener("click", () => {
-      if (!window.currentFile) {
-        alert("Please upload a JPG file.");
-        return;
-      }
-      if (!isPremium && conversionCount >= FREE_LIMIT) {
-        alert("Free limit reached! Upgrade to premium for unlimited conversions.");
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imgData = e.target.result;
-        const docDefinition = {
-          content: [
+    function payWithPaystack() {
+      let handler = PaystackPop.setup({
+        key: 'pk_live_7eeaf7c7e848c63b424b84dc001f76e57f42e470', // Your Paystack live key
+        email: 'thriveswithai@gmail.com', // Your email (update dynamically later if needed)
+        amount: 500000, // ₦5,000 in kobo (one-time payment)
+        currency: 'NGN',
+        ref: '' + Math.floor((Math.random() * 1000000000) + 1), // Unique transaction reference
+        metadata: {
+          custom_fields: [
             {
-              image: imgData,
-              width: 500,
-            },
-          ],
-        };
-        pdfMake.createPdf(docDefinition).download("converted.pdf");
-        conversionCount++;
-        document.getElementById("conversion-counter").innerText = 
-          `Free conversions: ${FREE_LIMIT - conversionCount}/${FREE_LIMIT}`;
-        if (conversionCount >= FREE_LIMIT && !isPremium) {
-          document.getElementById("convert-btn").disabled = true;
+              display_name: "Plan",
+              variable_name: "plan",
+              value: "Premium 3 Months"
+            }
+          ]
+        },
+        onClose: function() {
+          alert('Payment window closed.');
+        },
+        callback: function(response) {
+          alert('Payment successful! You now have Premium access for 3 months. Reference: ' + response.reference);
+          // Optionally redirect to a thank-you page: window.location.href = 'thank-you.html';
         }
-      };
-      reader.readAsDataURL(window.currentFile);
-    });
-
-    document.getElementById("upgrade-btn").addEventListener("click", () => {
-      PaystackPop.setup({
-        key: "pk_live_7eeaf7c7e848c63b424b84dc001f76e57f42e470", // Replace with your Paystack public key
-        email: "thriveswithai@gmail.com",
-        amount: 500000, // ₦5,000
-        currency: "NGN",
-        ref: "J2P_" + Math.floor(Math.random() * 1000000000),
-        callback: function (response) {
-          alert("Payment successful! Reference: " + response.reference);
-          isPremium = true;
-          document.getElementById("convert-btn").disabled = false;
-          document.getElementById("ad-placeholder").style.display = "none";
-          document.getElementById("upgrade-btn").style.display = "none";
-        },
-        onClose: function () {
-          alert("Payment cancelled.");
-        },
-      }).openIframe();
-    });
+      });
+      handler.openIframe();
+    }
   </script>
 </body>
 </html>
