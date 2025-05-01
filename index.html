@@ -74,8 +74,9 @@
     .upload-section {
       margin-top: 10px;
     }
-    input[type="file"] {
+    input[type="file"], input[type="email"] {
       margin: 10px 0;
+      padding: 5px;
     }
   </style>
 </head>
@@ -91,9 +92,10 @@
       <h2>Free Plan</h2>
       <p>Convert 2 Files Free!</p>
       <div class="upload-section">
+        <input type="email" id="emailInput" placeholder="Enter your email" value="thriveswithai@gmail.com" required>
         <input type="file" id="fileInput" accept="image/jpeg" multiple>
-        <button onclick="convertFree()">Convert to PDF</button>
-        <p id="free-message"></p>
+        <button onclick="convertFiles()">Convert to PDF</button>
+        <p id="message"></p>
       </div>
     </div>
 
@@ -107,9 +109,9 @@
     <!-- Ads Section -->
     <div class="ads">
       <h2>Our Ads</h2>
-      <!-- Replace with your actual ad image URLs (from Google Drive or upload directly) -->
-      <img src="visa-ad-image-url.jpg" alt="Visa Ad">
-      <img src="job-ad-image-url.jpg" alt="Job Ad">
+      <!-- Replace with your actual ad image URLs (e.g., from Google Drive) -->
+      <img src="https://via.placeholder.com/300x100?text=Visa+Ad" alt="Visa Ad">
+      <img src="https://via.placeholder.com/300x100?text=Job+Ad" alt="Job Ad">
     </div>
   </div>
 
@@ -118,22 +120,37 @@
     <p>© 2025 NaijaPDFConverter.com</p>
     <p>
       Recommended Tools: 
-      <a href="https://your-dropbox-affiliate-link.com">Dropbox</a> | 
-      <a href="https://your-adobe-acrobat-affiliate-link.com">Adobe Acrobat</a>
+      <a href="https://www.dropbox.com">Dropbox</a> | 
+      <a href="https://www.adobe.com/acrobat.html">Adobe Acrobat</a>
     </p>
   </footer>
 
   <!-- Paystack Inline Checkout Script -->
   <script src="https://js.paystack.co/v1/inline.js"></script>
   <script>
+    const API_BASE_URL = 'https://pdf-converter-vercel-backend.vercel.app/api';
+
+    function getUserEmail() {
+      const emailInput = document.getElementById('emailInput');
+      const email = emailInput.value.trim();
+      if (!email) {
+        alert('Please enter your email.');
+        return null;
+      }
+      return email;
+    }
+
     // Paystack for Premium Plan
     function payWithPaystack() {
+      const email = getUserEmail();
+      if (!email) return;
+
       let handler = PaystackPop.setup({
-        key: 'pk_live_7eeaf7c7e848c63b424b84dc001f76e57f42e470', // Your Paystack live key
-        email: 'thriveswithai@gmail.com', // Your email (update dynamically later if needed)
-        amount: 500000, // ₦5,000 in kobo (one-time payment)
+        key: 'pk_live_7eeaf7c7e848c63b424b84dc001f76e57f42e470',
+        email: email,
+        amount: 500000,
         currency: 'NGN',
-        ref: '' + Math.floor((Math.random() * 1000000000) + 1), // Unique transaction reference
+        ref: '' + Math.floor((Math.random() * 1000000000) + 1),
         metadata: {
           custom_fields: [
             {
@@ -146,30 +163,43 @@
         onClose: function() {
           alert('Payment window closed.');
         },
-        callback: function(response) {
+        callback: async function(response) {
           alert('Payment successful! You now have Premium access for 3 months. Reference: ' + response.reference);
-          // Optionally redirect to a thank-you page: window.location.href = 'thank-you.html';
+          // Update user status in backend
+          await fetch(`${API_BASE_URL}/user`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: email,
+              isPremium: true,
+              premiumExpiry: new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString()
+            })
+          });
         }
       });
       handler.openIframe();
     }
 
-    // Free Plan Conversion (Client-Side Simulation)
-    let freeConversionCount = 0;
-    const maxFreeConversions = 2;
+    // Convert Files (Free or Premium)
+    async function convertFiles() {
+      const email = getUserEmail();
+      if (!email) return;
 
-    function convertFree() {
+      const message = document.getElementById('message');
       const fileInput = document.getElementById('fileInput');
-      const message = document.getElementById('free-message');
       const files = fileInput.files;
 
-      // Check if files are selected
       if (files.length === 0) {
         message.textContent = 'Please select at least one JPG file.';
         return;
       }
 
-      // Check file type and limit
+      // Check user status
+      const userResponse = await fetch(`${API_BASE_URL}/user?email=${email}`);
+      const user = await userResponse.json();
+
+      const now = new Date();
+      const isPremium = user.isPremium && new Date(user.premiumExpiry) > now;
       let validFiles = 0;
       for (let i = 0; i < files.length; i++) {
         if (files[i].type === 'image/jpeg') {
@@ -182,29 +212,52 @@
         return;
       }
 
-      // Check free conversion limit
-      if (freeConversionCount + validFiles > maxFreeConversions) {
+      if (!isPremium && user.freeConversions + validFiles > 2) {
         message.textContent = 'Free limit reached! Upgrade to Premium for unlimited conversions.';
         return;
       }
 
-      // Simulate conversion (since there's no backend)
-      freeConversionCount += validFiles;
-      message.textContent = `Successfully "converted" ${validFiles} file(s) to PDF! (${freeConversionCount}/${maxFreeConversions} used)`;
+      // Convert files
+      message.textContent = 'Converting... Please wait.';
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        if (files[i].type === 'image/jpeg') {
+          formData.append('files', files[i]);
+        }
+      }
+      formData.append('email', email);
 
-      // Simulate a downloadable PDF link (placeholder)
-      setTimeout(() => {
-        const downloadLink = document.createElement('a');
-        downloadLink.href = '#'; // Replace with actual PDF URL if you add a backend
-        downloadLink.download = 'converted-file.pdf';
-        downloadLink.textContent = 'Download your PDF (placeholder)';
-        message.appendChild(document.createElement('br'));
-        message.appendChild(downloadLink);
-      }, 1000);
+      try {
+        const response = await fetch(`${API_BASE_URL}/convert`, {
+          method: 'POST',
+          body: formData
+        });
+        const result = await response.json();
 
-      // Clear the file input
-      fileInput.value = '';
+        if (result.error) {
+          message.textContent = result.error;
+          return;
+        }
+
+        // Display download links
+        result.urls.forEach((url, index) => {
+          const downloadLink = document.createElement('a');
+          downloadLink.href = url;
+          downloadLink.download = `converted-file-${index + 1}.pdf`;
+          downloadLink.textContent = `Download PDF ${index + 1}`;
+          message.appendChild(downloadLink);
+          message.appendChild(document.createElement('br'));
+        });
+
+        message.textContent = isPremium 
+          ? 'Conversion successful! Download your PDFs below.'
+          : `Conversion successful! (${user.freeConversions + validFiles}/2 free conversions used)`;
+        fileInput.value = '';
+      } catch (error) {
+        console.error('Conversion error:', error);
+        message.textContent = 'Error converting files. Please try again.';
+      }
     }
   </script>
 </body>
-                                                        </html>
+  </html>
